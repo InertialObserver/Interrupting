@@ -1,6 +1,6 @@
 ;-------------------------------------------------------------------------------------
 ; FILE: Lab 4 ENGR270
-; DESC: Modification of Interrupt Example
+; DESC: Modification of "Interrupt Example" Spins clockwise or counter clockwise upon interrupt
 ; DATE: 8-3-17
 ; AUTH: Jessi Iler, Kevin Black
 ; DEVICE: PICmicro (PIC18F1220)
@@ -20,12 +20,9 @@
  org 0x20
  
 HPRIO: ; high priority interrupt
- ADDLW .5 ; when interrupt 0 occurs   This may be irrelevant, because we don't need to change the LED blink rate
- ;BCF PORTB,4 ;Disable right   Try deleting this  Did delete and no effect. So not needed.
  BSF PORTB,3 ;Enable left
  MOVLW .20
  CALL Delay
- ;BCF PORTB,4 ;Disable right  Try deleting this Did delete and no effect. So not needed.
  BCF PORTB,3 ;Disable left
  BCF INTCON, INT0IF ; Clear Interrupt
  RETFIE ; Return from interrupt
@@ -36,12 +33,9 @@ LPRIO: ; Low priority interrupt
  RETFIE ; Return from interrupt 
  
 Intr1: ; take care of Interrupt 1
- ADDLW 0xFB ; W?(W-5). {note: SUBLW .5 will not work}  This may be irrelevant 
- ;BCF PORTB,3 ;Disable left  probably unnecessary Tested - no effect. Delete
  BSF PORTB,4 ;Enable right
  MOVLW .20
  CALL Delay
- ;BCF PORTB,3 ;Disable left probably unnecessary  Tested - no effect. Delete
  BCF PORTB,4 ;Disable right
  BCF INTCON3, INT1IF ; Clear interrupt 1 flag
  RETFIE ; Return from interrupt 
@@ -57,7 +51,7 @@ StartL: ; Initialization code to be executed during reset
  MOVLW 0xC7 ; Value used to initialize data direction 
  MOVWF TRISB ; Set Port B direction
  MOVLW 0x00 ; clear Wreg
- ; Enable NT0 and INT1
+ ; Enable INT0 and INT1
  BSF INTCON, GIEL ; enable low priority interrupts
  BSF INTCON, INT0IE ; enable INT0
  BSF INTCON3, INT1IE ; enable INT1
@@ -66,12 +60,13 @@ StartL: ; Initialization code to be executed during reset
  BCF INTCON, INT0IF ;flags must be cleared to allow an interrupt
  BCF INTCON3, INT1IF ;
  BSF INTCON, GIEH ; enable high priority interrupts
- MOVLW .5 ; Set starting delay to 0.5 seconds
 
 MainL: ;Main loop
  BTG PORTB,5 ; LED Toggle
+ MOVLW .5
  CALL Delay
- BRA MainL ; probably should be GOTO?
+ GOTO MainL  
+ 
 ;Function to delay for Wreg x 0.1 seconds
 
 Delay:               ; Using nested loops
