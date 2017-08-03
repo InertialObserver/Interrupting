@@ -20,12 +20,12 @@
  org 0x20
  
 HPRIO: ; high priority interrupt
- ADDLW .5 ; when interrupt 0 occurs 
- BCF PORTB,4 ;Disable right
+ ADDLW .5 ; when interrupt 0 occurs   This may be irrelevant, because we don't need to change the LED blink rate
+ BCF PORTB,4 ;Disable right   Try deleting this
  BSF PORTB,3 ;Enable left
  MOVLW .20
  CALL Delay
- BCF PORTB,4 ;Disable right
+ BCF PORTB,4 ;Disable right  Try deleting this 
  BCF PORTB,3 ;Disable left
  BCF INTCON, INT0IF ; Clear Interrupt
  RETFIE ; Return from interrupt
@@ -33,9 +33,10 @@ HPRIO: ; high priority interrupt
 LPRIO: ; Low priority interrupt
  BTFSC INTCON3, INT1IF ; Check for Interrupt 1
  BRA Intr1
- RETFIE ; Return from interrupt
+ RETFIE ; Return from interrupt 
+ 
 Intr1: ; take care of Interrupt 1
- ADDLW 0xFB ; W?(W-5). {note: SUBLW .5 will not work}
+ ADDLW 0xFB ; W?(W-5). {note: SUBLW .5 will not work}  This may be irrelevant 
  BCF PORTB,3 ;Disable left
  BSF PORTB,4 ;Enable right
  MOVLW .20
@@ -43,7 +44,7 @@ Intr1: ; take care of Interrupt 1
  BCF PORTB,3 ;Disable left
  BCF PORTB,4 ;Disable right
  BCF INTCON3, INT1IF ; Clear interrupt 1 flag
- RETFIE ; Return from interrupt
+ RETFIE ; Return from interrupt 
 
 StartL: ; Initialization code to be executed during reset
  ; Initialize all I/O ports
@@ -73,15 +74,15 @@ MainL: ;Main loop
  BRA MainL ; probably should be GOTO?
 ;Function to delay for Wreg x 0.1 seconds
 
-Delay:
- MOVWF countOD
+Delay:               ; Using nested loops
+ MOVWF countOD   ; put the contents of wreg into countOD
 DelayOL: ; delay Outer loop
- CLRF countID
+ CLRF countID  ; clear inner counter
 DelayIL: ; Delay Inner Loop
- INCF countID
- BNZ DelayIL
- DECF countOD
- BNZ DelayOL
+ INCF countID  ; increment inner counter
+ BNZ DelayIL   ; branch to DelayIL if any bit is nonzero
+ DECF countOD  ; decrement outer counter 
+ BNZ DelayOL   ; branch to DelayOL if any bit is nonzero
  RETURN ; end delay function
  end ; end of program
 
