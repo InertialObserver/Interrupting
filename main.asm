@@ -11,6 +11,8 @@
 #include p18f1220.inc ; This header file includes address and bit definitions for all SFRs
 #define countID 0x80
 #define countOD 0x81
+#define countInner 0x31
+#define countOuter 0x32
  org 0x000 ; Executes after reset
  GOTO StartL
  org 0x008 ; Executes after high priority interrupt
@@ -65,7 +67,7 @@ StartL: ; Initialization code to be executed during reset
 MainL: ;Main loop
  BTG PORTB,5 ; LED Toggle
  MOVLW .5
- CALL Delay
+ CALL DelayLED
  GOTO MainL  
  
 ;Function to delay for Wreg x 0.1 seconds
@@ -80,6 +82,19 @@ DelayIL: ; Delay Inner Loop
  DECF countOD  ; decrement outer counter 
  BNZ DelayOL   ; branch to DelayOL if any bit is nonzero
  RETURN ; end delay function
+ 
+  ; delay function for MainL
+ DelayLED: 
+     MOVWF countOuter   ; put the contents of wreg into countOD
+DelayOuter: ; delay Outer loop
+ CLRF countInner  ; clear inner counter
+DelayInner: ; Delay Inner Loop
+ INCF countInner  ; increment inner counter
+ BNZ DelayInner   ; branch to DelayIL if any bit is nonzero
+ DECF countOuter  ; decrement outer counter 
+ BNZ DelayOuter   ; branch to DelayOL if any bit is nonzero
+ RETURN ; end delay function
+ 
  end ; end of program
 
 
