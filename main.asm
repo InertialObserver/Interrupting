@@ -60,6 +60,7 @@ StartL: ; Initialization code to be executed during reset
  BCF INTCON, INT0IF ;flags must be cleared to allow an interrupt
  BCF INTCON3, INT1IF ;
  BSF INTCON, GIEH ; enable high priority interrupts
+ ;MOVLW .5 ; Set starting delay to 0.5 seconds
 
 MainL: ;Main loop
  BTG PORTB,5 ; LED Toggle
