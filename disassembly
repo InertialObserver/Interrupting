@@ -1,0 +1,155 @@
+! GOTO StartL
+0x0: GOTO 0x46
+0x2: NOP
+! org 0x008 ; Executes after high priority interrupt
+! GOTO HPRIO
+0x8: GOTO 0x20
+0xA: NOP
+! org 0x018 ; Executes after low priority interrupt
+! GOTO LPRIO
+0x18: GOTO 0x32
+0x1A: NOP
+! org 0x20
+! 
+!HPRIO: ; high priority interrupt
+! BSF PORTB,3 ;Enable left
+0x20: BSF PORTB, 3, ACCESS
+! MOVLW .20
+0x22: MOVLW 0x14
+! CALL Delay
+0x24: CALL 0x82, 0
+0x26: NOP
+! GOTO MainL2
+0x28: GOTO 0x74
+0x2A: NOP
+! 
+! HIGHOFF:
+! BCF PORTB,3 ;Disable left
+0x2C: BCF PORTB, 3, ACCESS
+! BCF INTCON, INT0IF ; Clear Interrupt
+0x2E: BCF INTCON, 1, ACCESS
+! RETFIE ; Return from interrupt
+0x30: RETFIE 0
+!LPRIO: ; Low priority interrupt
+! BTFSC INTCON3, INT1IF ; Check for Interrupt 1
+0x32: BTFSC INTCON3, 0, ACCESS
+! BRA Intr1
+0x34: BRA Intr1
+! RETFIE ; Return from interrupt 
+0x36: RETFIE 0
+! 
+!Intr1: ; take care of Interrupt 1
+! BSF PORTB,4 ;Enable right
+0x38: BSF PORTB, 4, ACCESS
+! MOVLW .20
+0x3A: MOVLW 0x14
+! CALL Delay
+0x3C: CALL 0x82, 0
+0x3E: NOP
+! BCF PORTB,4 ;Disable right
+0x40: BCF PORTB, 4, ACCESS
+! BCF INTCON3, INT1IF ; Clear interrupt 1 flag
+0x42: BCF INTCON3, 0, ACCESS
+! RETFIE ; Return from interrupt 
+0x44: RETFIE 0
+!StartL: ; Initialization code to be executed during reset
+! ; Initialize all I/O ports
+! CLRF PORTA ; Initialize PORTA
+0x46: CLRF PORTA, ACCESS
+! CLRF PORTB ; Initialize PORTB
+0x48: CLRF PORTB, ACCESS
+! MOVLW 0x7F ; Set all A\D Converter Pins as
+0x4A: MOVLW 0x7F
+! MOVWF ADCON1 ; digital I/O pins
+0x4C: MOVWF ADCON1, ACCESS
+! MOVLW 0x0D ; Value used to initialize data direction
+0x4E: MOVLW 0xD
+! MOVWF TRISA ; Set Port A direction
+0x50: MOVWF TRISA, ACCESS
+! MOVLW 0xC7 ; Value used to initialize data direction 
+0x52: MOVLW 0xC7
+! MOVWF TRISB ; Set Port B direction
+0x54: MOVWF TRISB, ACCESS
+! MOVLW 0x00 ; clear Wreg
+0x56: MOVLW 0x0
+! ; Enable INT0 and INT1
+! BSF INTCON, GIEL ; enable low priority interrupts
+0x58: BSF INTCON, 6, ACCESS
+! BSF INTCON, INT0IE ; enable INT0
+0x5A: BSF INTCON, 4, ACCESS
+! BSF INTCON3, INT1IE ; enable INT1
+0x5C: BSF INTCON3, 3, ACCESS
+! BCF INTCON3, INT1IP ; INT1 is set to low priority
+0x5E: BCF INTCON3, 6, ACCESS
+! BSF RCON, IPEN ; enable priority levels on interrupts
+0x60: BSF RCON, 7, ACCESS
+! BCF INTCON, INT0IF ;flags must be cleared to allow an interrupt
+0x62: BCF INTCON, 1, ACCESS
+! BCF INTCON3, INT1IF ;
+0x64: BCF INTCON3, 0, ACCESS
+! BSF INTCON, GIEH ; enable high priority interrupts
+0x66: BSF INTCON, 7, ACCESS
+! ;MOVLW .5 ; Set starting delay to 0.5 seconds
+!MainL: ;Main loop
+! BTG PORTB,5 ; LED Toggle
+0x68: BTG PORTB, 5, ACCESS
+! MOVLW .5
+0x6A: MOVLW 0x5
+! CALL DelayLED
+0x6C: CALL 0x90, 0
+0x6E: NOP
+! GOTO MainL  
+0x70: GOTO 0x68
+0x72: NOP
+! 
+! MainL2: ; EC Loop
+! BTG PORTB,5 ; LED Toggle
+0x74: BTG PORTB, 5, ACCESS
+! MOVLW .5
+0x76: MOVLW 0x5
+! CALL DelayLED
+0x78: CALL 0x90, 0
+0x7A: NOP
+! BCF PORTB,3 ;Disable left
+0x7C: BCF PORTB, 3, ACCESS
+! GOTO HIGHOFF
+0x7E: GOTO 0x2C
+0x80: NOP
+! 
+!;Function to delay for Wreg x 0.1 seconds
+!Delay:               ; Using nested loops
+! MOVWF countOD   ; put the contents of wreg into countOD
+0x82: MOVWF 0x81, BANKED
+!DelayOL: ; delay Outer loop
+! CLRF countID  ; clear inner counter
+0x84: CLRF 0x80, BANKED
+!DelayIL: ; Delay Inner Loop
+! INCF countID  ; increment inner counter
+0x86: INCF 0x80, F, BANKED
+! BNZ DelayIL   ; branch to DelayIL if any bit is nonzero
+0x88: BNZ DelayIL
+! DECF countOD  ; decrement outer counter 
+0x8A: DECF 0x81, F, BANKED
+! BNZ DelayOL   ; branch to DelayOL if any bit is nonzero
+0x8C: BNZ DelayOL
+! RETURN ; end delay function
+0x8E: RETURN 0
+! 
+!  ; delay function for MainL
+! DelayLED: 
+!     MOVWF countOuter   ; put the contents of wreg into countOD
+0x90: MOVWF 0x32, ACCESS
+!DelayOuter: ; delay Outer loop
+! CLRF countInner  ; clear inner counter
+0x92: CLRF 0x31, ACCESS
+!DelayInner: ; Delay Inner Loop
+! INCF countInner  ; increment inner counter
+0x94: INCF 0x31, F, ACCESS
+! BNZ DelayInner   ; branch to DelayIL if any bit is nonzero
+0x96: BNZ DelayInner
+! DECF countOuter  ; decrement outer counter 
+0x98: DECF 0x32, F, ACCESS
+! BNZ DelayOuter   ; branch to DelayOL if any bit is nonzero
+0x9A: BNZ DelayOuter
+! RETURN ; end delay function
+0x9C: RETURN 0
